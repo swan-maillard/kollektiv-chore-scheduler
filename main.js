@@ -447,22 +447,24 @@ function updateExportButton() {
 
 function exportCSV() {
   if (monthHistory.length === 0) return;
-  const schedule = monthHistory[monthHistory.length - 1];
   const names = PEOPLE.map(p => p.name);
-  const header = ['Week', ...names].join(',');
-  const rows = schedule.map((week, wi) => {
-    const cells = names.map(name => {
-      if (week.resting === name) return 'REST';
-      return week.assignments[name] || '';
+  const header = ['Month', 'Week', ...names].join(',');
+  const rows = [];
+  monthHistory.forEach((schedule, mi) => {
+    schedule.forEach((week, wi) => {
+      const cells = names.map(name => {
+        if (week.resting === name) return 'REST';
+        return week.assignments[name] || '';
+      });
+      rows.push([mi + 1, wi + 1, ...cells].join(','));
     });
-    return [wi + 1, ...cells].join(',');
   });
   const csv = [header, ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `kollektiv-month-${monthHistory.length}.csv`;
+  a.download = `kollektiv-chores-schedules.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -476,20 +478,22 @@ function importCSV(event) {
     if (lines.length < 2) return alert('CSV must have a header row and at least one data row.');
 
     const headerCols = lines[0].split(',').map(s => s.trim());
-    const names = headerCols.slice(1);
+    const names = headerCols.slice(2); // skip Month and Week columns
 
     // Validate person names
     const knownNames = PEOPLE.map(p => p.name);
     const unknown = names.filter(n => !knownNames.includes(n));
     if (unknown.length) return alert('Unknown people in CSV: ' + unknown.join(', '));
 
-    const schedule = [];
+    // Group rows by month
+    const monthsMap = {};
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(',').map(s => s.trim());
+      const monthNum = cols[0];
       let resting = null;
       const assignments = {};
       for (let j = 0; j < names.length; j++) {
-        const val = cols[j + 1];
+        const val = cols[j + 2]; // offset by 2 (Month, Week)
         if (!val) continue;
         if (val.toUpperCase() === 'REST') {
           resting = names[j];
@@ -498,13 +502,24 @@ function importCSV(event) {
           assignments[names[j]] = val;
         }
       }
-      schedule.push({ resting, assignments });
+      if (!monthsMap[monthNum]) monthsMap[monthNum] = [];
+      monthsMap[monthNum].push({ resting, assignments });
     }
 
-    monthHistory.push(schedule);
-    const happiness = computeHappiness(schedule);
-    updateCarryOver(happiness);
-    renderSchedule(schedule, monthHistory.length - 1);
+    // Reset state and replay all months
+    monthHistory = [];
+    PEOPLE.forEach(p => cumulativeHappiness[p.name] = 0);
+
+    const monthKeys = Object.keys(monthsMap).sort((a, b) => Number(a) - Number(b));
+    monthKeys.forEach(key => {
+      const schedule = monthsMap[key];
+      monthHistory.push(schedule);
+      const happiness = computeHappiness(schedule);
+      updateCarryOver(happiness);
+    });
+
+    // Render the last month
+    renderSchedule(monthHistory[monthHistory.length - 1], monthHistory.length - 1);
     renderMonthTabs();
     renderCarryOverInfo();
     updateExportButton();
