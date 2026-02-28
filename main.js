@@ -90,8 +90,7 @@ function generateSchedule() {
     const restPerson = restingPerWeek[week];
     const activePeople = [...PEOPLE.filter(p => p.name !== restPerson)].sort(() => Math.random() - 0.5);
 
-    // Assign 6 chores to 6 active people
-    // Use Hungarian-like greedy optimization with carry-over bonus
+    // Assign the chores to the active people
     const assignment = optimizeAssignment(activePeople, week, schedule);
 
     schedule.push({
@@ -101,6 +100,18 @@ function generateSchedule() {
   }
 
   return schedule;
+}
+
+function permute(arr) {
+  if (arr.length <= 1) return [arr];
+  const result = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+    for (const p of permute(rest)) {
+      result.push([arr[i], ...p]);
+    }
+  }
+  return result;
 }
 
 function optimizeAssignment(activePeople, weekIndex, previousWeeks) {
@@ -114,22 +125,17 @@ function optimizeAssignment(activePeople, weekIndex, previousWeeks) {
   // Compute average cumulative happiness to know who's behind
   const avgCumulative = PEOPLE.reduce((s, p) => s + cumulativeHappiness[p.name], 0) / PEOPLE.length;
 
-  const ITERATIONS = 3000;
+  // Enumerate all 6! = 720 permutations to find the optimal assignment
+  const permutations = permute(choreIds);
 
-  for (let iter = 0; iter < ITERATIONS; iter++) {
-    let shuffled = [...choreIds];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
+  for (const perm of permutations) {
     let assignment = {};
     let personScores = [];
     let totalScore = 0;
 
     for (let i = 0; i < activePeople.length; i++) {
       const person = activePeople[i];
-      const chore = shuffled[i];
+      const chore = perm[i];
       assignment[person.name] = chore;
 
       // Base happiness score
