@@ -378,6 +378,8 @@
   }
 
   .happiness-card {
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;

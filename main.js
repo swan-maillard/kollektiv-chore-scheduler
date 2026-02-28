@@ -347,11 +347,13 @@ function renderHappiness(happiness, monthIndex) {
           <div class="happiness-bar" style="width:${pct}%; background:${happinessColor(h.totalScore / Math.max(1, activeWeeks.length))}"></div>
         </div>
         <div class="happiness-tasks">${taskItems}</div>
-        ${showCumulative ? `
+       <div style="flex-grow:1"></div> 
         <div class="happiness-cumulative">
-          <i data-lucide="bar-chart-3"></i> Cumulative: ${cumulativeHappiness[p.name] > 0 ? '+' : ''}${cumulativeHappiness[p.name]}
+         ${showCumulative ? `
+            <i data-lucide="bar-chart-3"></i> Cumulative: ${cumulativeHappiness[p.name] > 0 ? '+' : ''}${cumulativeHappiness[p.name]}`
+          : ''}
           ${deficit > 0.5 ? `<span class="happiness-priority"><i data-lucide="zap"></i> Priority next month</span>` : ''}
-        </div>` : ''}
+        </div>
       </div>
     `;
   }).join('');
