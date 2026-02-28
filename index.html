@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chore Harmony — Monthly Cleaning Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="main.js" defer></script>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1><span>Kollektiv</span> chores scheduler</h1>
+    <p class="subtitle">Optimized monthly cleaning schedules that keep everyone happy</p>
+  </header>
+
+  <div class="controls">
+    <button class="btn-primary" onclick="generateNextMonth()">Generate Next Month</button>
+    <button class="btn-secondary" onclick="resetAll()">Reset All</button>
+  </div>
+
+  <div id="carry-over"></div>
+
+  <section>
+    <h2 class="section-title">Kollektiv Members</h2>
+    <div class="people-grid" id="people-grid"></div>
+  </section>
+
+  <section id="schedule-section" style="display:none">
+    <h2 class="section-title" id="schedule-title">Schedule</h2>
+    <div class="schedule-container" id="schedule-container"></div>
+  </section>
+
+  <section id="happiness-section" style="display:none">
+    <h2 class="section-title">Happiness Report</h2>
+    <div class="happiness-grid" id="happiness-grid"></div>
+  </section>
+
+  <section class="history-section" id="history-section" style="display:none">
+    <h2 class="section-title">Month History</h2>
+    <div class="month-tabs" id="month-tabs"></div>
+  </section>
+</div>
+
+</body>
+</html>
