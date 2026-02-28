@@ -6,19 +6,19 @@ const CHORES = [
   { id: 'entrance',   name: 'Entrance',       icon: 'door-open' },
   { id: 'kitchen',    name: 'Kitchen',        icon: 'cooking-pot' },
   { id: 'living',     name: 'Living Room',    icon: 'sofa' },
-  { id: 'major_bath', name: 'Major Bathroom', icon: 'shower-head' },
-  { id: 'minor_bath', name: 'Minor Bathroom', icon: 'sparkles' },
+  { id: 'major_bath', name: 'Major Bathroom', icon: 'toilet' },
+  { id: 'minor_bath', name: 'Minor Bathroom', icon: 'shower-head' },
   { id: 'trash',      name: 'Trash',          icon: 'trash-2' },
 ];
 
 const PEOPLE = [
   { name: 'Ingeborg', color: '#60a5fa', likes: ['minor_bath', 'major_bath', 'trash', 'kitchen', 'entrance', 'living'], dislikes: [] },
   { name: 'Katrin',   color: '#34d399', likes: ['minor_bath', 'kitchen'],                          dislikes: ['trash'] },
-  { name: 'Klara',    color: '#c084fc', likes: ['minor_bath'],                                     dislikes: [] },
+  { name: 'Klara',    color: '#c084fc', likes: ['minor_bath', 'living'],                                     dislikes: [] },
   { name: 'Marie',    color: '#f472b6', likes: ['kitchen', 'major_bath', 'living'],                dislikes: ['entrance'] },
   { name: 'Moritz',   color: '#fb923c', likes: ['trash', 'major_bath'],                            dislikes: ['kitchen'] },
   { name: 'Swan',     color: '#fbbf24', likes: ['major_bath', 'trash', 'entrance'],               dislikes: [] },
-  { name: 'Viviane',  color: '#f87171', likes: ['trash'],                                          dislikes: [] },
+  { name: 'Viviane',  color: '#f87171', likes: ['trash', 'minor_bath'],                                          dislikes: [] },
 ];
 
 const WEEKS_PER_MONTH = 5;
@@ -57,10 +57,10 @@ function generateSchedule() {
   const w = WEEKS_PER_MONTH;
   const c = CHORES.length;
 
-  // Determine rest schedule: 7 people, 4 weeks → 4 rest slots
+  // Determine rest schedule: 7 people, 5 weeks → 3 rest slots
   // We want each person to rest roughly equally over time.
-  // 4 weeks, 1 resting per week. With carry-over, track total rests.
-  // Pick 4 people who have rested least (with tie-breaking by unhappiness)
+  // 5 weeks, 1 resting per week. With carry-over, track total rests.
+  // Pick 3 people who have rested least (with tie-breaking by unhappiness)
 
   let totalRests = {};
   PEOPLE.forEach(p => totalRests[p.name] = 0);
@@ -88,7 +88,7 @@ function generateSchedule() {
 
   for (let week = 0; week < w; week++) {
     const restPerson = restingPerWeek[week];
-    const activePeople = PEOPLE.filter(p => p.name !== restPerson);
+    const activePeople = [...PEOPLE.filter(p => p.name !== restPerson)].sort(() => Math.random() - 0.5);
 
     // Assign 6 chores to 6 active people
     // Use Hungarian-like greedy optimization with carry-over bonus
@@ -107,6 +107,9 @@ function optimizeAssignment(activePeople, weekIndex, previousWeeks) {
   const choreIds = CHORES.map(c => c.id);
   let bestAssignment = null;
   let bestScore = -Infinity;
+
+  // Only consider the last 5 weeks for variation penalties
+  const recentWeeks = previousWeeks.slice(-5);
 
   // Compute average cumulative happiness to know who's behind
   const avgCumulative = PEOPLE.reduce((s, p) => s + cumulativeHappiness[p.name], 0) / PEOPLE.length;
@@ -140,11 +143,25 @@ function optimizeAssignment(activePeople, weekIndex, previousWeeks) {
         s += deficit * 0.4 * (person.dislikes.includes(chore) ? -1 : 0);
       }
 
-      // Variation penalty: if person had same chore in previous weeks this month, penalize
-      for (let pw = 0; pw < previousWeeks.length; pw++) {
-        if (previousWeeks[pw].assignments[person.name] === chore) {
+      // Variation penalty: if person had the same chore twice in a row, penalize
+      if (recentWeeks.length > 1) {
+        const previousToLastWeek = recentWeeks[recentWeeks.length - 2];
+        const lastWeek = recentWeeks[recentWeeks.length - 1];
+        if (previousToLastWeek.assignments[person.name] === chore &&
+            lastWeek.assignments[person.name] === chore) {
           s -= 2;
         }
+      }
+
+      // Variation penalty: if person had the same chore at least 2 times this month, penalize
+      const sameChoreCount = recentWeeks.filter(pw => pw.assignments[person.name] === chore).length;
+      if (sameChoreCount >= 2) {
+        s -= 2;
+      }
+
+      // Variation penalty: if person had the same chore at least 3 times this month, penalize even more
+      if (sameChoreCount >= 3) {
+        s -= 2;
       }
 
       personScores.push(s);
