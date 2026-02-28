@@ -3,12 +3,12 @@
 // ═══════════════════════════════════════════════════════════
 
 const CHORES = [
-  { id: 'entrance',   name: 'Entrance',       icon: '🚪' },
-  { id: 'kitchen',    name: 'Kitchen',        icon: '🍳' },
-  { id: 'living',     name: 'Living Room',    icon: '🛋️' },
-  { id: 'major_bath', name: 'Major Bathroom', icon: '🚿' },
-  { id: 'minor_bath', name: 'Minor Bathroom', icon: '🪥' },
-  { id: 'trash',      name: 'Trash',          icon: '🗑️' },
+  { id: 'entrance',   name: 'Entrance',       icon: 'door-open' },
+  { id: 'kitchen',    name: 'Kitchen',        icon: 'cooking-pot' },
+  { id: 'living',     name: 'Living Room',    icon: 'sofa' },
+  { id: 'major_bath', name: 'Major Bathroom', icon: 'shower-head' },
+  { id: 'minor_bath', name: 'Minor Bathroom', icon: 'sparkles' },
+  { id: 'trash',      name: 'Trash',          icon: 'trash-2' },
 ];
 
 const PEOPLE = [
@@ -214,23 +214,29 @@ function renderPeopleGrid() {
         ${p.name}
       </div>
       <div class="prefs">
-        <div class="pref-row pref-loves">
-          <span class="pref-icon">♥</span>
-          ${p.likes.map(l => CHORES.find(c => c.id === l).name).join(', ')}
+        <div class="pref-section pref-loves">
+          <span class="pref-label"><i data-lucide="heart"></i> Likes</span>
+          <div class="pref-chips">
+            ${p.likes.map(l => { const ch = CHORES.find(c => c.id === l); return `<span class="pref-chip pref-chip--like"><i data-lucide="${ch.icon}"></i> ${ch.name}</span>`; }).join('')}
+          </div>
         </div>
-        <div class="pref-row pref-hates">
-          <span class="pref-icon">✗</span>
-          ${p.dislikes.map(d => CHORES.find(c => c.id === d).name).join(', ')}
-        </div>
+        ${p.dislikes.length ? `
+        <div class="pref-section pref-hates">
+          <span class="pref-label"><i data-lucide="x"></i> Dislikes</span>
+          <div class="pref-chips">
+            ${p.dislikes.map(d => { const ch = CHORES.find(c => c.id === d); return `<span class="pref-chip pref-chip--dislike"><i data-lucide="${ch.icon}"></i> ${ch.name}</span>`; }).join('')}
+          </div>
+        </div>` : ''}
       </div>
     </div>
   `).join('');
+  lucide.createIcons();
 }
 
 function renderSchedule(schedule, monthIndex) {
   const section = document.getElementById('schedule-section');
   section.style.display = '';
-  document.getElementById('schedule-title').textContent = `Month ${monthIndex + 1} Schedule`;
+  document.getElementById('schedule-title').innerHTML = `<i data-lucide="calendar-days"></i> Month ${monthIndex + 1} Schedule`;
 
   const happiness = computeHappiness(schedule);
   const container = document.getElementById('schedule-container');
@@ -246,7 +252,7 @@ function renderSchedule(schedule, monthIndex) {
     for (let w = 0; w < WEEKS_PER_MONTH; w++) {
       const week = schedule[w];
       if (week.resting === p.name) {
-        cells += `<td><span class="rest-badge">💤 Rest</span></td>`;
+        cells += `<td><span class="rest-badge"><i data-lucide="moon"></i> Rest</span></td>`;
       } else {
         const choreId = week.assignments[p.name];
         const chore = CHORES.find(c => c.id === choreId);
@@ -254,7 +260,7 @@ function renderSchedule(schedule, monthIndex) {
         const color = happinessColor(score);
         cells += `<td>
           <div class="chore-cell" style="color: ${color}">
-            ${chore.icon} ${chore.name}
+            <i data-lucide="${chore.icon}"></i> ${chore.name}
           </div>
         </td>`;
       }
@@ -274,6 +280,7 @@ function renderSchedule(schedule, monthIndex) {
     </table>
   `;
 
+  lucide.createIcons();
   renderHappiness(happiness, monthIndex);
 }
 
@@ -290,10 +297,19 @@ function renderHappiness(happiness, monthIndex) {
     const avgCum = PEOPLE.reduce((s, pp) => s + cumulativeHappiness[pp.name], 0) / PEOPLE.length;
     const deficit = avgCum - cumulativeHappiness[p.name];
 
-    let detail = activeWeeks.map(w => {
+    const taskItems = activeWeeks.map(w => {
       const ch = CHORES.find(c => c.id === w.chore);
-      return `${ch.icon} ${w.score > 0 ? '+' : ''}${w.score}`;
-    }).join('  ');
+      const color = happinessColor(w.score);
+      const scoreLabel = w.score > 0 ? `+${w.score}` : `${w.score}`;
+      return `
+        <div class="happiness-task" style="color: ${color}">
+          <i data-lucide="${ch.icon}"></i>
+          <span class="happiness-task-name">${ch.name}</span>
+          <span class="happiness-task-score">${scoreLabel}</span>
+        </div>`;
+    }).join('');
+
+    const showCumulative = monthHistory.length > 1;
 
     return `
       <div class="happiness-card" style="animation-delay: ${i * 0.05}s">
@@ -307,14 +323,16 @@ function renderHappiness(happiness, monthIndex) {
         <div class="happiness-bar-bg">
           <div class="happiness-bar" style="width:${pct}%; background:${happinessColor(h.totalScore / Math.max(1, activeWeeks.length))}"></div>
         </div>
-        <div class="happiness-detail">
-          ${detail}
-          <br>📊 Cumulative: ${cumulativeHappiness[p.name] > 0 ? '+' : ''}${cumulativeHappiness[p.name]}
-          ${deficit > 0.5 ? ` · ⚡ Priority next month` : ''}
-        </div>
+        <div class="happiness-tasks">${taskItems}</div>
+        ${showCumulative ? `
+        <div class="happiness-cumulative">
+          <i data-lucide="bar-chart-3"></i> Cumulative: ${cumulativeHappiness[p.name] > 0 ? '+' : ''}${cumulativeHappiness[p.name]}
+          ${deficit > 0.5 ? `<span class="happiness-priority"><i data-lucide="zap"></i> Priority next month</span>` : ''}
+        </div>` : ''}
       </div>
     `;
   }).join('');
+  lucide.createIcons();
 }
 
 function renderCarryOverInfo() {
@@ -332,9 +350,10 @@ function renderCarryOverInfo() {
   if (behind.length === 0) {
     el.innerHTML = `
       <div class="carry-over-info">
-        ✅ <strong>Happiness is well balanced</strong> — everyone is within range of the average cumulative score (${avgCum.toFixed(1)}).
+        <i data-lucide="circle-check"></i> <strong>Happiness is well balanced</strong> — everyone is within range of the average cumulative score (${avgCum.toFixed(1)}).
       </div>
     `;
+    lucide.createIcons();
     return;
   }
 
@@ -347,6 +366,7 @@ function renderCarryOverInfo() {
         <strong>Priority for next month:</strong> ${items} — below average happiness (${avgCum.toFixed(1)}), will be prioritized for their favorite chores.
     </div>
   `;
+  lucide.createIcons();
 }
 
 function renderMonthTabs() {
@@ -384,6 +404,7 @@ function generateNextMonth() {
   renderSchedule(schedule, monthHistory.length - 1);
   renderMonthTabs();
   renderCarryOverInfo();
+  updateExportButton();
 
   document.getElementById('schedule-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -396,7 +417,86 @@ function resetAll() {
   document.getElementById('history-section').style.display = 'none';
   document.getElementById('carry-over').innerHTML = '';
   renderMonthTabs();
+  updateExportButton();
+}
+
+function updateExportButton() {
+  document.getElementById('btn-export').style.display = monthHistory.length > 0 ? '' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// CSV EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+
+function exportCSV() {
+  if (monthHistory.length === 0) return;
+  const schedule = monthHistory[monthHistory.length - 1];
+  const names = PEOPLE.map(p => p.name);
+  const header = ['Week', ...names].join(',');
+  const rows = schedule.map((week, wi) => {
+    const cells = names.map(name => {
+      if (week.resting === name) return 'REST';
+      return week.assignments[name] || '';
+    });
+    return [wi + 1, ...cells].join(',');
+  });
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kollektiv-month-${monthHistory.length}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const lines = e.target.result.trim().split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 2) return alert('CSV must have a header row and at least one data row.');
+
+    const headerCols = lines[0].split(',').map(s => s.trim());
+    const names = headerCols.slice(1);
+
+    // Validate person names
+    const knownNames = PEOPLE.map(p => p.name);
+    const unknown = names.filter(n => !knownNames.includes(n));
+    if (unknown.length) return alert('Unknown people in CSV: ' + unknown.join(', '));
+
+    const schedule = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(s => s.trim());
+      let resting = null;
+      const assignments = {};
+      for (let j = 0; j < names.length; j++) {
+        const val = cols[j + 1];
+        if (!val) continue;
+        if (val.toUpperCase() === 'REST') {
+          resting = names[j];
+        } else {
+          if (!CHORES.find(c => c.id === val)) return alert(`Unknown chore "${val}" on row ${i + 1}.`);
+          assignments[names[j]] = val;
+        }
+      }
+      schedule.push({ resting, assignments });
+    }
+
+    monthHistory.push(schedule);
+    const happiness = computeHappiness(schedule);
+    updateCarryOver(happiness);
+    renderSchedule(schedule, monthHistory.length - 1);
+    renderMonthTabs();
+    renderCarryOverInfo();
+    updateExportButton();
+    document.getElementById('schedule-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 // Init
 renderPeopleGrid();
+lucide.createIcons();

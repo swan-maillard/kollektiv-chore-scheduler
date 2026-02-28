@@ -3,28 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chore Harmony — Monthly Cleaning Schedule</title>
+<title>Kollektiv Chores Scheduler</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script src="main.js" defer></script>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
 </head>
 <body>
 
 <div class="container">
   <header>
-    <h1><span>Kollektiv</span> chores scheduler</h1>
+    <h1 style="display: flex; align-items: center; gap:1rem; justify-content: center;"><img class="icon" src="icon.png" alt="Icon"><span>Kollektiv</span> chores scheduler</h1>
     <p class="subtitle">Optimized monthly cleaning schedules that keep everyone happy</p>
   </header>
 
   <div class="controls">
-    <button class="btn-primary" onclick="generateNextMonth()">Generate Next Month</button>
-    <button class="btn-secondary" onclick="resetAll()">Reset All</button>
+    <button class="btn-primary" onclick="generateNextMonth()"><i data-lucide="calendar-plus"></i> Generate Next Month</button>
+    <button class="btn-secondary" id="btn-export" onclick="exportCSV()" style="display:none"><i data-lucide="download"></i> Export CSV</button>
+    <button class="btn-secondary" onclick="document.getElementById('csv-input').click()"><i data-lucide="upload"></i> Import CSV</button>
+    <button class="btn-secondary" onclick="resetAll()"><i data-lucide="rotate-ccw"></i> Reset All</button>
+    <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="importCSV(event)">
   </div>
 
   <div id="carry-over"></div>
 
   <section>
-    <h2 class="section-title">Kollektiv Members</h2>
+    <h2 class="section-title"><i data-lucide="users"></i> Kollektiv Members</h2>
     <div class="people-grid" id="people-grid"></div>
   </section>
 
@@ -34,12 +39,12 @@
   </section>
 
   <section id="happiness-section" style="display:none">
-    <h2 class="section-title">Happiness Report</h2>
+    <h2 class="section-title"><i data-lucide="smile"></i> Happiness Report</h2>
     <div class="happiness-grid" id="happiness-grid"></div>
   </section>
 
   <section class="history-section" id="history-section" style="display:none">
-    <h2 class="section-title">Month History</h2>
+    <h2 class="section-title"><i data-lucide="history"></i> Month History</h2>
     <div class="month-tabs" id="month-tabs"></div>
   </section>
 </div>

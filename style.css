@@ -72,6 +72,11 @@
 
   h1 span { color: var(--accent); }
 
+  .icon {
+    height: 60px;
+    width: 60px;
+  }
+
   .subtitle {
     color: var(--text-muted);
     font-size: 0.95rem;
@@ -191,19 +196,102 @@
     letter-spacing: -.1rem;
   }
 
-  .prefs { display: flex; flex-direction: column; gap: 0.35rem; }
+  .prefs { display: flex; flex-direction: column; gap: 0.6rem; }
 
-  .pref-row {
+  .pref-section {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 0.4rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
   }
 
-  .pref-icon { font-size: 0.85rem; }
-  .pref-loves .pref-icon { color: var(--happy); }
-  .pref-hates .pref-icon { color: var(--sad); }
+  .pref-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .pref-label .lucide {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pref-loves .pref-label { color: var(--happy); }
+  .pref-hates .pref-label { color: var(--sad); }
+
+  .pref-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .pref-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+  }
+
+  .pref-chip .lucide {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pref-chip--like {
+    background: #4ade8015;
+    color: var(--happy);
+    border: 1px solid #4ade8025;
+  }
+
+  .pref-chip--dislike {
+    background: #f8717115;
+    color: var(--sad);
+    border: 1px solid #f8717125;
+  }
+
+  /* Lucide icons global sizing */
+  [data-lucide], .lucide {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  .section-title .lucide {
+    width: 22px;
+    height: 22px;
+  }
+
+  .btn-primary .lucide,
+  .btn-secondary .lucide {
+    width: 15px;
+    height: 15px;
+  }
+
+
+  .chore-cell .lucide {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rest-badge .lucide {
+    width: 14px;
+    height: 14px;
+  }
+
+
+  .carry-over-info > .lucide {
+    width: 18px;
+    height: 18px;
+  }
+
 
   /* Schedule */
   .schedule-container { margin-bottom: 3rem; }
@@ -332,10 +420,60 @@
     transition: width 0.8s ease;
   }
 
-  .happiness-detail {
+  .happiness-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .happiness-task {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    background: var(--surface2);
+  }
+
+  .happiness-task .lucide {
+    width: 14px;
+    height: 14px;
+  }
+
+  .happiness-task-name {
+    flex: 1;
+  }
+
+  .happiness-task-score {
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+
+  .happiness-cumulative {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.75rem;
     color: var(--text-muted);
-    line-height: 1.5;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .happiness-cumulative .lucide {
+    width: 13px;
+    height: 13px;
+  }
+
+  .happiness-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--neutral);
+    margin-left: auto;
+    font-weight: 600;
   }
 
   /* Month history */
