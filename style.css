@@ -196,6 +196,102 @@
     letter-spacing: -.1rem;
   }
 
+  .btn-edit-prefs {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.3rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .btn-edit-prefs:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .btn-edit-prefs .lucide {
+    width: 14px;
+    height: 14px;
+  }
+
+  .prefs-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .pref-edit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+  }
+
+  .pref-edit-chore {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .pref-edit-chore .lucide {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pref-edit-toggles {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .pref-toggle {
+    padding: 0.25rem 0.4rem;
+    border-radius: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .pref-toggle .lucide {
+    width: 13px;
+    height: 13px;
+  }
+
+  .pref-toggle:hover {
+    border-color: var(--text-muted);
+  }
+
+  .pref-toggle--like.active {
+    background: #4ade8020;
+    color: var(--happy);
+    border-color: #4ade8040;
+  }
+
+  .pref-toggle--neutral.active {
+    background: #fbbf2420;
+    color: var(--neutral);
+    border-color: #fbbf2440;
+  }
+
+  .pref-toggle--dislike.active {
+    background: #f8717120;
+    color: var(--sad);
+    border-color: #f8717140;
+  }
+
   .prefs { display: flex; flex-direction: column; gap: 0.6rem; }
 
   .pref-section {

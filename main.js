@@ -12,13 +12,13 @@ const CHORES = [
 ];
 
 const PEOPLE = [
-  { name: 'Ingeborg', color: '#60a5fa', likes: ['minor_bath', 'major_bath', 'trash', 'kitchen', 'entrance', 'living'], dislikes: [] },
-  { name: 'Katrin',   color: '#34d399', likes: ['minor_bath', 'kitchen'],                          dislikes: ['trash'] },
-  { name: 'Klara',    color: '#c084fc', likes: ['minor_bath', 'living'],                                     dislikes: [] },
-  { name: 'Marie',    color: '#f472b6', likes: ['kitchen', 'major_bath', 'living'],                dislikes: ['entrance'] },
-  { name: 'Moritz',   color: '#fb923c', likes: ['trash', 'major_bath'],                            dislikes: ['kitchen'] },
-  { name: 'Swan',     color: '#fbbf24', likes: ['major_bath', 'trash', 'entrance'],               dislikes: [] },
-  { name: 'Viviane',  color: '#f87171', likes: ['trash', 'minor_bath'],                                          dislikes: [] },
+  { name: 'Ingeborg', color: '#60a5fa', likes: ['minor_bath', 'trash', 'kitchen', 'entrance', 'living'], dislikes: ['major_bath'] },
+  { name: 'Katrin',   color: '#34d399', likes: ['minor_bath', 'kitchen'],                          dislikes: ['trash', 'major_bath'] },
+  { name: 'Klara',    color: '#c084fc', likes: ['minor_bath', 'entrance'],                                     dislikes: ['major_bath', 'living'] },
+  { name: 'Marie',    color: '#f472b6', likes: ['kitchen', 'minor_bath', 'living'],                dislikes: ['entrance','major_bath'] },
+  { name: 'Moritz',   color: '#fb923c', likes: ['trash', 'major_bath'],                            dislikes: ['kitchen', 'minor_bath'] },
+  { name: 'Swan',     color: '#fbbf24', likes: ['major_bath', 'trash', 'entrance'],               dislikes: ['kitchen', 'minor_bath'] },
+  { name: 'Viviane',  color: '#f87171', likes: ['trash', 'entrance'],                                          dislikes: ['minor_bath'] },
 ];
 
 const WEEKS_PER_MONTH = 5;
@@ -235,8 +235,9 @@ function renderPeopleGrid() {
       <div class="person-name">
         <div class="person-avatar" style="background: ${p.color}">${p.name[0]} ${p.name[1]}</div>
         ${p.name}
+        <button class="btn-edit-prefs" onclick="toggleEditPrefs(${i})" title="Edit preferences"><i data-lucide="pencil"></i></button>
       </div>
-      <div class="prefs">
+      <div class="prefs" id="prefs-view-${i}">
         <div class="pref-section pref-loves">
           <span class="pref-label"><i data-lucide="heart"></i> Likes</span>
           <div class="pref-chips">
@@ -251,9 +252,45 @@ function renderPeopleGrid() {
           </div>
         </div>` : ''}
       </div>
+      <div class="prefs-editor" id="prefs-edit-${i}" style="display:none">
+        ${CHORES.map(ch => {
+          const state = p.likes.includes(ch.id) ? 'like' : p.dislikes.includes(ch.id) ? 'dislike' : 'neutral';
+          return `
+          <div class="pref-edit-row">
+            <span class="pref-edit-chore"><i data-lucide="${ch.icon}"></i> ${ch.name}</span>
+            <div class="pref-edit-toggles">
+              <button class="pref-toggle pref-toggle--like ${state === 'like' ? 'active' : ''}" onclick="setPref(${i},'${ch.id}','like')" title="Like"><i data-lucide="heart"></i></button>
+              <button class="pref-toggle pref-toggle--neutral ${state === 'neutral' ? 'active' : ''}" onclick="setPref(${i},'${ch.id}','neutral')" title="Neutral"><i data-lucide="minus"></i></button>
+              <button class="pref-toggle pref-toggle--dislike ${state === 'dislike' ? 'active' : ''}" onclick="setPref(${i},'${ch.id}','dislike')" title="Dislike"><i data-lucide="x"></i></button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
     </div>
   `).join('');
   lucide.createIcons();
+}
+
+function toggleEditPrefs(personIndex) {
+  const view = document.getElementById(`prefs-view-${personIndex}`);
+  const editor = document.getElementById(`prefs-edit-${personIndex}`);
+  const isEditing = editor.style.display !== 'none';
+  view.style.display = isEditing ? '' : 'none';
+  editor.style.display = isEditing ? 'none' : '';
+}
+
+function setPref(personIndex, choreId, state) {
+  const person = PEOPLE[personIndex];
+  person.likes = person.likes.filter(id => id !== choreId);
+  person.dislikes = person.dislikes.filter(id => id !== choreId);
+  if (state === 'like') person.likes.push(choreId);
+  if (state === 'dislike') person.dislikes.push(choreId);
+  renderPeopleGrid();
+  // Re-open the editor for the same person
+  const editor = document.getElementById(`prefs-edit-${personIndex}`);
+  const view = document.getElementById(`prefs-view-${personIndex}`);
+  view.style.display = 'none';
+  editor.style.display = '';
 }
 
 function renderSchedule(schedule, monthIndex) {
@@ -537,6 +574,63 @@ function importCSV(event) {
   event.target.value = '';
 }
 
+// Auto-import CSV if present
+function autoImportCSV() {
+  fetch('kollektiv-chores-schedules.csv')
+    .then(res => {
+      if (!res.ok) return;
+      return res.text();
+    })
+    .then(text => {
+      if (!text) return;
+      const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+      if (lines.length < 2) return;
+
+      const headerCols = lines[0].split(',').map(s => s.trim());
+      const names = headerCols.slice(2);
+      const knownNames = PEOPLE.map(p => p.name);
+      if (names.some(n => !knownNames.includes(n))) return;
+
+      const monthsMap = {};
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(s => s.trim());
+        const monthNum = cols[0];
+        let resting = null;
+        const assignments = {};
+        for (let j = 0; j < names.length; j++) {
+          const val = cols[j + 2];
+          if (!val) continue;
+          if (val.toUpperCase() === 'REST') {
+            resting = names[j];
+          } else {
+            if (!CHORES.find(c => c.id === val)) return;
+            assignments[names[j]] = val;
+          }
+        }
+        if (!monthsMap[monthNum]) monthsMap[monthNum] = [];
+        monthsMap[monthNum].push({ resting, assignments });
+      }
+
+      monthHistory = [];
+      PEOPLE.forEach(p => cumulativeHappiness[p.name] = 0);
+
+      const monthKeys = Object.keys(monthsMap).sort((a, b) => Number(a) - Number(b));
+      monthKeys.forEach(key => {
+        const schedule = monthsMap[key];
+        monthHistory.push(schedule);
+        const happiness = computeHappiness(schedule);
+        updateCarryOver(happiness);
+      });
+
+      renderSchedule(monthHistory[monthHistory.length - 1], monthHistory.length - 1);
+      renderMonthTabs();
+      renderCarryOverInfo();
+      updateExportButton();
+    })
+    .catch(() => {});
+}
+
 // Init
 renderPeopleGrid();
 lucide.createIcons();
+autoImportCSV();

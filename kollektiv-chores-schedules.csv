@@ -1,0 +1,6 @@
+Month,Week,Ingeborg,Katrin,Klara,Marie,Moritz,Swan,Viviane
+1,1,REST,kitchen,minor_bath,living,major_bath,entrance,trash
+1,2,minor_bath,living,entrance,kitchen,major_bath,REST,trash
+1,3,living,minor_bath,REST,kitchen,trash,major_bath,entrance
+1,4,entrance,kitchen,minor_bath,living,REST,major_bath,trash
+1,5,kitchen,REST,minor_bath,living,major_bath,trash,entrance
